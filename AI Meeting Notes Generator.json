@@ -1,0 +1,408 @@
+{
+  "name": "AI Meeting Notes Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1EUIFnIYpitaimH2WtLkscGeARJyiyUVi",
+          "mode": "list",
+          "cachedResultName": "Meeting Transcripts",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1EUIFnIYpitaimH2WtLkscGeARJyiyUVi"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b6a25860-678d-4aea-bdf1-68892844df31",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Kvh8QdN18yIaiC6Q",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d7557d98-c515-475f-af1c-ae1ca576a983",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Kvh8QdN18yIaiC6Q",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "58fe1927-027f-4c2e-aa3f-706fa53bcce7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert meeting assistant.\n\nAnalyze the meeting transcript below.\n\nReturn ONLY valid JSON.\n\nExtract:\n\nmeeting_title\n\nmeeting_date\n\nsummary\n\nparticipants\n\naction_items\n\ndecisions\n\nDo not include markdown.\n\nMeeting Transcript:\n\n{{ $json.text }}",
+        "options": {
+          "systemMessage": "Full the extraction at very best and make no mistake in order to satisfied the client user"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "5e8480c3-c00c-4cff-84d6-30e0c3424438",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        208
+      ],
+      "id": "e337368f-6b5a-4e33-b2de-29b0260712eb",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DCQRGMEQUhoaAPMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "meeting_title",
+              "description": "Meeting title"
+            },
+            {
+              "name": "meeting_date",
+              "description": "Meeting date"
+            },
+            {
+              "name": "summary",
+              "description": "Meeting summary"
+            },
+            {
+              "name": "participants",
+              "description": "List of meeting participants"
+            },
+            {
+              "name": "action_items",
+              "description": "Tasks assigned during the meeting"
+            },
+            {
+              "name": "decisions",
+              "description": "Important decisions made"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "56b00898-b1f3-4b67-a6cf-f419672fb103",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        208
+      ],
+      "id": "1c86bece-c3f7-49e9-9ab6-de742e220921",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DCQRGMEQUhoaAPMU",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1So4aWfdvQ02cHM0pOlqvt1PBZvLqriSsra5Ip1aJsvo",
+          "mode": "list",
+          "cachedResultName": "AI Meeting Notes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1So4aWfdvQ02cHM0pOlqvt1PBZvLqriSsra5Ip1aJsvo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1So4aWfdvQ02cHM0pOlqvt1PBZvLqriSsra5Ip1aJsvo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Meeting": "={{ $json.output.meeting_title }}",
+            "Date": "={{ $json.output.meeting_date }}",
+            "Summary": "={{ $json.output.summary }}",
+            "Participants": "={{ $json.output.participants }}",
+            "Action Items": "={{ $json.output.action_items }}",
+            "Decisions": "={{ $json.output.decisions }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Meeting",
+              "displayName": "Meeting",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Participants",
+              "displayName": "Participants",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Action Items",
+              "displayName": "Action Items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Decisions",
+              "displayName": "Decisions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        0
+      ],
+      "id": "e8bd2894-6ea7-495a-b9f3-6381994f6d7a",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gDYHfg7A9mxu9DjC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "5518864435",
+        "text": "=📋 AI Meeting Notes  \n📝 Meeting: {{ $json.Meeting }}  \n📅 Date: {{ $json.Date }}\n📌 Summary: {{$json.Summary}}  \n👥 Participants: {{$json.Participants}}  \n✅ Action Items: {{ $json['Action Items'] }}  \n🎯 Decisions: {{ $json.Decisions }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1536,
+        0
+      ],
+      "id": "6f2bb6f0-84a3-4403-a32d-f11e94a59ac0",
+      "name": "Chatbot",
+      "webhookId": "3677cc1f-6636-4157-b023-68be42ad57d1",
+      "credentials": {
+        "telegramApi": {
+          "id": "L3p6Zwhan5RNHgHE",
+          "name": "AI Meeting Bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Chatbot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ad4a321c-9e57-4843-bbd8-56fff2109b50",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9ff00ff5a0ab351fbd5a0e9b85a809f5fbe0b80a75ad48283dc333dfaa98b61b"
+  },
+  "nodeGroups": [],
+  "id": "59JOqyElpdNaVuJY",
+  "tags": []
+}
